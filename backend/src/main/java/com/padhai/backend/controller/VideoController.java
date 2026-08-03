@@ -1,0 +1,56 @@
+package com.padhai.backend.controller;
+
+import com.padhai.backend.entity.User;
+import com.padhai.backend.entity.Video;
+import com.padhai.backend.service.SubscriptionService;
+import com.padhai.backend.service.UserService;
+import com.padhai.backend.service.VideoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/videos")
+public class VideoController {
+
+    private final VideoService videoService;
+    private final SubscriptionService subscriptionService;
+    private final UserService userService;
+
+    public VideoController(VideoService videoService,
+                           SubscriptionService subscriptionService,
+                           UserService userService) {
+        this.videoService = videoService;
+        this.subscriptionService = subscriptionService;
+        this.userService = userService;
+    }
+
+    private User currentUser() {
+        String email = (String) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return userService.getByEmail(email);
+    }
+
+    // Admin: add a new video (we'll secure this properly later)
+    @PostMapping("/add")
+    public Video addVideo(@RequestBody Video video) {
+        return videoService.addVideo(video);
+    }
+
+    // Student: get videos — ONLY if subscription is active
+    @GetMapping
+    public List<Video> getVideos() {
+        User user = currentUser();
+
+        if (!subscriptionService.isSubscriptionActive(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You need an active subscription to watch videos");
+        }
+
+        return videoService.getAllVideos();
+    }
+}
