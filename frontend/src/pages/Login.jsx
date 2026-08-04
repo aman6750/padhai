@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
@@ -13,9 +15,8 @@ function Login() {
         password: password,
       });
 
-      // Save the token in the browser
       localStorage.setItem('token', response.data.token);
-      setMessage('Login successful! Token saved.');
+      navigate('/dashboard'); // go to dashboard after login
     } catch (error) {
       setMessage('Error: Invalid email or password');
     }
