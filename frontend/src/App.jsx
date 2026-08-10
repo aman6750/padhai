@@ -10,26 +10,27 @@ function NavBar() {
   const token = localStorage.getItem('token');
 
   const handleLogout = () => {
-    localStorage.removeItem('token'); // clear the token
+    localStorage.removeItem('token');
     navigate('/login');
   };
 
   return (
-    <nav style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      {token ? (
-        // Logged IN: show these
-        <>
-          <Link to="/dashboard" style={{ marginRight: '15px' }}>Dashboard</Link>
-          <Link to="/videos" style={{ marginRight: '15px' }}>Videos</Link>
-          <button onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</button>
-        </>
-      ) : (
-        // Logged OUT: show these
-        <>
-          <Link to="/register" style={{ marginRight: '15px' }}>Register</Link>
-          <Link to="/login">Login</Link>
-        </>
-      )}
+    <nav className="navbar">
+      <span className="brand">पढ़<span className="ai">AI</span></span>
+      <div className="navbar-links">
+        {token ? (
+          <>
+            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/videos">Videos</Link>
+            <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <Link to="/register">Register</Link>
+            <Link to="/login">Login</Link>
+          </>
+        )}
+      </div>
     </nav>
   );
 }
@@ -41,22 +42,8 @@ function App() {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/videos"
-          element={
-            <ProtectedRoute>
-              <Videos />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
         <Route path="/" element={<Login />} />
       </Routes>
     </BrowserRouter>

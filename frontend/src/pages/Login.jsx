@@ -10,48 +10,33 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await api.post('/api/users/login', {
-        email: email,
-        password: password,
-      });
-
+      const response = await api.post('/api/users/login', { email, password });
       localStorage.setItem('token', response.data.token);
-      navigate('/dashboard'); // go to dashboard after login
+      navigate('/dashboard');
     } catch (error) {
-      setMessage('Error: Invalid email or password');
+      setMessage('Invalid email or password');
     }
   };
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '400px' }}>
-      <h1>पढ़AI</h1>
+    <div className="card">
       <h2>Login</h2>
-
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-      </div>
-
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-      </div>
-
-      <button onClick={handleLogin} style={{ padding: '10px 20px' }}>
-        Login
-      </button>
-
-      {message && <p style={{ marginTop: '15px' }}>{message}</p>}
+      <input
+        className="input"
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <input
+        className="input"
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button className="btn" onClick={handleLogin}>Login</button>
+      {message && <p className="message error">{message}</p>}
     </div>
   );
 }

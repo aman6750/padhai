@@ -1,5 +1,5 @@
 package com.padhai.backend.controller;
-
+import java.util.Map;
 import com.padhai.backend.entity.Subscription;
 import com.padhai.backend.entity.User;
 import com.padhai.backend.service.SubscriptionService;
@@ -20,6 +20,24 @@ public class SubscriptionController {
                                   UserService userService) {
         this.subscriptionService = subscriptionService;
         this.userService = userService;
+    }
+
+    @PostMapping("/create-order")
+    public String createOrder() throws Exception {
+        return subscriptionService.createOrder();
+    }
+
+    // Step 2: frontend calls this after payment to verify + activate
+    @PostMapping("/verify-payment")
+    public Map<String, Object> verifyPayment(@RequestBody Map<String, String> data) {
+        User user = currentUser();
+        boolean success = subscriptionService.verifyAndActivate(
+                user.getId(),
+                data.get("razorpay_order_id"),
+                data.get("razorpay_payment_id"),
+                data.get("razorpay_signature")
+        );
+        return Map.of("success", success);
     }
 
     // Helper: get the logged-in user from the JWT

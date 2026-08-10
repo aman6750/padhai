@@ -15,42 +15,27 @@ function Videos() {
         if (error.response?.status === 403) {
           setMessage('You need an active subscription to watch videos. Please subscribe from the Dashboard.');
         } else {
-          setMessage('Could not load videos. Are you logged in?');
+          setMessage('Could not load videos.');
         }
       } finally {
         setLoading(false);
       }
     };
-
     fetchVideos();
   }, []);
 
-  if (loading) {
-    return <p style={{ padding: '40px' }}>Loading videos...</p>;
-  }
+  if (loading) return <div className="page"><p>Loading videos...</p></div>;
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '800px' }}>
-      <h1>पढ़AI</h1>
+    <div className="page">
       <h2>Video Lessons</h2>
-
-      {message && <p style={{ color: 'red' }}>{message}</p>}
-
+      {message && <p className="message error">{message}</p>}
       {videos.map((video) => (
-        <div
-          key={video.id}
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '15px',
-            marginBottom: '20px',
-          }}
-        >
-          <h3 style={{ margin: '0 0 10px 0' }}>{video.title}</h3>
-          <p style={{ margin: '0 0 10px 0', color: '#555' }}>{video.description}</p>
-          <video width="100%" controls>
+        <div key={video.id} className="video-card">
+          <h3>{video.title}</h3>
+          <p>{video.description}</p>
+          <video controls>
             <source src={video.videoUrl} type="video/mp4" />
-            Your browser does not support video.
           </video>
         </div>
       ))}

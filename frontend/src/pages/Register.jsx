@@ -1,67 +1,53 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 function Register() {
-  // State to hold what the user types
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+  const navigate = useNavigate();
 
-  // Runs when the user clicks "Register"
   const handleRegister = async () => {
     try {
-      const response = await api.post('/api/users/register', {
-        name: name,
-        email: email,
-        password: password,
-      });
-      setMessage('Registered successfully! ID: ' + response.data.id);
+      await api.post('/api/users/register', { name, email, password });
+      setIsError(false);
+      setMessage('Registered successfully! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 1500);
     } catch (error) {
-      setMessage('Error: ' + (error.response?.data?.message || 'Registration failed'));
+      setIsError(true);
+      setMessage('Registration failed. Email may already be registered.');
     }
   };
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '400px' }}>
-      <h1>पढ़AI</h1>
+    <div className="card">
       <h2>Register</h2>
-
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-      </div>
-
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-      </div>
-
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px' }}
-        />
-      </div>
-
-      <button onClick={handleRegister} style={{ padding: '10px 20px' }}>
-        Register
-      </button>
-
-      {message && <p style={{ marginTop: '15px' }}>{message}</p>}
+      <input
+        className="input"
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        className="input"
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <input
+        className="input"
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button className="btn" onClick={handleRegister}>Register</button>
+      {message && <p className={`message ${isError ? 'error' : 'success'}`}>{message}</p>}
     </div>
   );
 }
