@@ -31,3 +31,8 @@ application-local.properties
 # Node / React (frontend)
 node_modules/
 dist/
+
+# Build output & IDE
+target/
+*.iml
+.idea/
