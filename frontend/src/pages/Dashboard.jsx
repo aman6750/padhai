@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../services/api';
 
 function Dashboard() {
@@ -25,11 +25,13 @@ function Dashboard() {
     try {
       // Step 1: ask our backend to create a Razorpay order
       const orderResponse = await api.post('/api/subscriptions/create-order');
-      const order = JSON.parse(orderResponse.data);
+      const order = typeof orderResponse.data === 'string'
+  ? JSON.parse(orderResponse.data)
+  : orderResponse.data;
 
       // Step 2: configure the Razorpay popup
       const options = {
-        key: 'rzp_test_YOUR_KEY_ID_HERE', // <-- your Key ID
+        key: 'rzp_test_TLnGgIKmD8cjOO', // <-- your Key ID
         amount: order.amount,
         currency: order.currency,
         name: 'पढ़AI',
@@ -61,6 +63,7 @@ function Dashboard() {
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
+        console.log('PAYMENT ERROR:', error); 
       setMessage('Could not start payment. Please try again.');
     }
   };
