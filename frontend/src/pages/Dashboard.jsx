@@ -31,7 +31,7 @@ function Dashboard() {
 
       // Step 2: configure the Razorpay popup
       const options = {
-        key: 'rzp_test_TLnGgIKmD8cjOO', // <-- your Key ID
+        key: 'rzp_test_TPHNLYMFgqH0Sj', // <-- your Key ID
         amount: order.amount,
         currency: order.currency,
         name: 'पढ़AI',
