@@ -1,5 +1,6 @@
 package com.padhai.backend.controller;
-
+import com.padhai.backend.service.VdoCipherService;
+import java.util.Map;
 import com.padhai.backend.entity.User;
 import com.padhai.backend.entity.Video;
 import com.padhai.backend.service.SubscriptionService;
@@ -19,13 +20,18 @@ public class VideoController {
     private final VideoService videoService;
     private final SubscriptionService subscriptionService;
     private final UserService userService;
+    // add VdoCipherService to the constructor
+    private final VdoCipherService vdoCipherService;
 
+    // update your constructor to include it, e.g.:
     public VideoController(VideoService videoService,
                            SubscriptionService subscriptionService,
-                           UserService userService) {
+                           UserService userService,
+                           VdoCipherService vdoCipherService) {
         this.videoService = videoService;
         this.subscriptionService = subscriptionService;
         this.userService = userService;
+        this.vdoCipherService = vdoCipherService;
     }
 
     private User currentUser() {
@@ -52,5 +58,21 @@ public class VideoController {
         }
 
         return videoService.getAllVideos();
+    }
+
+    // the new endpoint — get an OTP for a specific video, ONLY if subscribed
+    @GetMapping("/{videoId}/otp")
+    public Map<String, Object> getVideoOtp(@PathVariable String videoId) {
+        User user = currentUser();
+
+        // Reuse your existing subscription gate!
+        if (!subscriptionService.isSubscriptionActive(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You need an active subscription to watch videos");
+        }
+
+        // Subscribed → get a playback token from VdoCipher
+        return vdoCipherService.getOtp(videoId);
     }
 }
