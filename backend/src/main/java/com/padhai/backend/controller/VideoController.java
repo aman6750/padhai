@@ -40,12 +40,6 @@ public class VideoController {
         return userService.getByEmail(email);
     }
 
-    // Admin: add a new video (we'll secure this properly later)
-    @PostMapping("/add")
-    public Video addVideo(@RequestBody Video video) {
-        return videoService.addVideo(video);
-    }
-
     // Student: get videos — ONLY if subscription is active
     @GetMapping
     public List<Video> getVideos() {
@@ -75,4 +69,17 @@ public class VideoController {
         // Subscribed → get a playback token from VdoCipher
         return vdoCipherService.getOtp(videoId);
     }
+
+    // the add-video endpoint — now ADMIN only
+    @PostMapping("/add")
+    public Video addVideo(@RequestBody Video video) {
+        User user = currentUser();
+        if (!"ADMIN".equals(user.getRole())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only admins can add videos");
+        }
+        return videoService.addVideo(video);
+    }
+
 }

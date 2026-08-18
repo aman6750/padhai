@@ -36,4 +36,12 @@ public class UserController {
         return Map.of("email", email);
     }
 
+    @GetMapping("/me/role")
+    public Map<String, String> myRole() {
+        String email = (String) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        User user = userService.getByEmail(email);
+        return Map.of("role", user.getRole() != null ? user.getRole() : "USER");
+    }
+
 }

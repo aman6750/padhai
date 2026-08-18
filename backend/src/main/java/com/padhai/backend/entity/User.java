@@ -18,4 +18,8 @@ public class User {
     private String email;
 
     private String password;
+
+    // "USER" or "ADMIN" — defaults to USER
+    @Column(nullable = false)
+    private String role = "USER";
 }
