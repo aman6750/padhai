@@ -15,7 +15,7 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
 
-    // add these fields inside the class
+
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
 

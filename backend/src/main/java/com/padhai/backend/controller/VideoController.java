@@ -10,7 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 @RestController
@@ -80,6 +81,17 @@ public class VideoController {
                     "Only admins can add videos");
         }
         return videoService.addVideo(video);
+    }
+
+    // delete a video — ADMIN only
+    @DeleteMapping("/{id}")
+    public Map<String, Boolean> deleteVideo(@PathVariable Long id) {
+        User user = currentUser();
+        if (!"ADMIN".equals(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can delete videos");
+        }
+        videoService.deleteVideo(id);
+        return Map.of("deleted", true);
     }
 
 }

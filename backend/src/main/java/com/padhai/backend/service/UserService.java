@@ -1,10 +1,15 @@
 package com.padhai.backend.service;
-
+import java.util.List;
 import com.padhai.backend.entity.User;
 import com.padhai.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.padhai.backend.util.JwtUtil;
+import com.padhai.backend.entity.Subject;
+import com.padhai.backend.repository.SubjectRepository;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -12,13 +17,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    // add SubjectRepository to the constructor
+    private final SubjectRepository subjectRepository;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil) {
+                       JwtUtil jwtUtil,
+                       SubjectRepository subjectRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.subjectRepository = subjectRepository;
     }
 
     public User register(User user) {
@@ -50,5 +59,26 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    // Promote a user to teacher and assign subjects
+    public User assignTeacher(Long userId, List<Long> subjectIds) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setRole("TEACHER");
+
+        Set<Subject> subjects = new HashSet<>();
+        for (Long subjectId : subjectIds) {
+            Subject subject = subjectRepository.findById(subjectId)
+                    .orElseThrow(() -> new RuntimeException("Subject not found"));
+            subjects.add(subject);
+        }
+        user.setSubjects(subjects);
+
+        return userRepository.save(user);
+    }
 
 }

@@ -22,4 +22,9 @@ public class VideoService {
     public List<Video> getAllVideos() {
         return videoRepository.findAllByOrderByOrderIndexAsc();
     }
+
+    public void deleteVideo(Long id) {
+        videoRepository.deleteById(id);
+    }
+
 }
