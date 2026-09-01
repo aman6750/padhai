@@ -15,6 +15,11 @@ import TakeTest from './pages/TakeTest';
 import TeacherTests from './pages/TeacherTests';
 import StudentTests from './pages/StudentTests';
 import Doubts from './pages/Doubts';
+import Terms from './pages/legal/Terms';
+import Privacy from './pages/legal/Privacy';
+import Refund from './pages/legal/Refund';
+import Contact from './pages/legal/Contact';
+import Pricing from './pages/legal/Pricing';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -82,7 +87,25 @@ function App() {
         <Route path="/tests" element={<ProtectedRoute><StudentTests /></ProtectedRoute>} />
         <Route path="/teacher/tests" element={<ProtectedRoute><TeacherTests /></ProtectedRoute>} />
         <Route path="/doubts" element={<ProtectedRoute><Doubts /></ProtectedRoute>} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/refund" element={<Refund />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/pricing" element={<Pricing />} />
       </Routes>
+      <footer style={{
+  padding: '24px', textAlign: 'center', borderTop: '1px solid #e5e7eb',
+  marginTop: '40px', fontSize: '14px', color: '#666'
+}}>
+  <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
+    <Link to="/terms">Terms</Link>
+    <Link to="/privacy">Privacy</Link>
+    <Link to="/refund">Refund Policy</Link>
+    <Link to="/pricing">Pricing</Link>
+    <Link to="/contact">Contact</Link>
+  </div>
+  <p>© 2026 पढ़AI. All rights reserved.</p>
+</footer>
     </BrowserRouter>
   );
 }
