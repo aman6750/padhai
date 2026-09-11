@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import api from '../services/api';
 
 export default function Login() {
@@ -16,7 +16,7 @@ export default function Login() {
       const response = await api.post('/api/users/login', { email, password });
       // store the token (mobile uses AsyncStorage)
       await AsyncStorage.setItem('token', response.data.token);
-      router.replace('/dashboard');   // go to dashboard after login
+      router.replace('/dashboard');
     } catch (error) {
       Alert.alert('Login failed', 'Invalid email or password');
     } finally {

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import api from '../services/api';
 
 export default function Notes() {
@@ -8,6 +9,7 @@ export default function Notes() {
   const [notes, setNotes] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();   
 
   // Load subjects
   useEffect(() => {
@@ -37,6 +39,9 @@ export default function Notes() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 16 }}>
+         <Text style={{ color: '#2563eb', fontSize: 16 }}>← wapas</Text>
+        </TouchableOpacity>
       <Text style={styles.heading}>Study Notes</Text>
 
       {/* Subject buttons */}
@@ -66,9 +71,9 @@ export default function Notes() {
             <View key={note.id} style={styles.noteCard}>
               <Text style={styles.noteTitle}>{note.title}</Text>
               <Text style={styles.noteDesc}>{note.description}</Text>
-              <TouchableOpacity style={styles.openBtn}>
-                <Text style={styles.openBtnText}>Open Note (coming next)</Text>
-              </TouchableOpacity>
+              <TouchableOpacity style={styles.openBtn} onPress={() => router.push(`/note-view?noteId=${note.id}`)}>
+                <Text style={styles.openBtnText}>Open Note</Text>
+               </TouchableOpacity>
             </View>
           ))}
         </View>
