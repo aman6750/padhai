@@ -5,6 +5,20 @@
   box-sizing: border-box;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;   /* stops horizontal scroll/overflow */
+  max-width: 100%;
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Segoe UI', 'Noto Sans Devanagari', system-ui, sans-serif;
   background: #f5f7fb;
@@ -32,11 +46,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  flex-wrap: wrap; 
 }
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .navbar a {
   text-decoration: none;
@@ -75,10 +91,11 @@ body {
 .card {
   background: #ffffff;
   max-width: 420px;
-  margin: 60px auto;
-  padding: 40px;
+  margin: 40px auto;
+  padding: 24px;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  width: 100%;
 }
 .card h2 {
   margin-bottom: 24px;
@@ -112,7 +129,8 @@ body {
 .page {
   max-width: 900px;
   margin: 40px auto;
-  padding: 0 24px;
+  padding: 0 16px;    /* smaller side padding on mobile */
+  width: 100%;
 }
 
 /* ===== Status badges ===== */
@@ -147,4 +165,39 @@ body {
 .video-card video {
   width: 100%;
   border-radius: 8px;
+}
+
+
+.card {
+  max-width: 420px;
+  width: 100%;
+  margin: 40px auto;
+  padding: 24px;     /* was 40px — smaller for mobile */
+}
+
+@media (max-width: 600px) {
+  .brand {
+    font-size: 1.5rem;   /* smaller brand on phones */
+  }
+
+  .navbar {
+    padding: 12px 16px;  /* less padding on phones */
+  }
+
+  .page {
+    padding: 0 12px;
+  }
+
+  h2 {
+    font-size: 1.4rem;   /* smaller headings on phones */
+  }
+
+  table {
+    font-size: 13px;     /* tables are common overflow culprits */
+  }
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;    /* table scrolls sideways within its box */
 }
