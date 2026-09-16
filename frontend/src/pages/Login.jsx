@@ -27,6 +27,7 @@ function Login() {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
       />
       <input
         className="input"
@@ -34,6 +35,7 @@ function Login() {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
       />
       <button className="btn" onClick={handleLogin}>Login</button>
       {message && <p className="message error">{message}</p>}

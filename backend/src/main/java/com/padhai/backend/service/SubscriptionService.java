@@ -9,6 +9,10 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.Order;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import com.razorpay.RazorpayClient;
+import com.razorpay.Payment;
+import com.razorpay.Utils;
+import org.json.JSONObject;
 
 @Service
 public class SubscriptionService {
@@ -67,22 +71,38 @@ public class SubscriptionService {
     public boolean verifyAndActivate(Long userId, String orderId,
                                      String paymentId, String signature) {
         try {
+            // Step 1: verify the signature (proves payment is genuine + tied to our order)
             JSONObject options = new JSONObject();
             options.put("razorpay_order_id", orderId);
             options.put("razorpay_payment_id", paymentId);
             options.put("razorpay_signature", signature);
 
-            // This checks the signature using your secret key
-            boolean isValid = Utils.verifyPaymentSignature(options, razorpayKeySecret);
-
-            if (isValid) {
-                activateSubscription(userId); // your existing method
-                return true;
+            boolean isValidSignature = Utils.verifyPaymentSignature(options, razorpayKeySecret);
+            if (!isValidSignature) {
+                return false; // signature invalid → reject
             }
-            return false;
+
+            // Step 2: fetch the actual payment from Razorpay and check the amount
+            RazorpayClient client = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+            Payment payment = client.payments.fetch(paymentId);
+
+            int amountPaid = payment.get("amount");     // amount in paise
+            String status = payment.get("status");      // e.g. "captured"
+
+            // Must be exactly ₹500 (50000 paise) AND successfully captured
+            if (amountPaid != 50000) {
+                return false; // wrong amount → reject
+            }
+            if (!"captured".equals(status) && !"authorized".equals(status)) {
+                return false; // payment not actually completed → reject
+            }
+
+            // All checks passed → activate subscription
+            activateSubscription(userId);
+            return true;
+
         } catch (Exception e) {
             return false;
         }
-
     }
 }

@@ -5,15 +5,7 @@
   box-sizing: border-box;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  overflow-x: hidden;   /* stops horizontal scroll/overflow */
-  max-width: 100%;
-}
-
-#root {
+html, body, #root {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -26,13 +18,13 @@ body {
   min-height: 100vh;
 }
 
-/* ===== Brand wordmark ===== */
+/* ===== Brand ===== */
 .brand {
   font-size: 2rem;
   font-weight: 700;
 }
 .brand .ai {
-  color: #2563eb; /* the AI accent color */
+  color: #2563eb;
 }
 
 /* ===== Navbar ===== */
@@ -46,13 +38,25 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
+}
+.navbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  line-height: 1;
 }
 .navbar-links {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+  gap: 20px;
 }
 .navbar a {
   text-decoration: none;
@@ -76,31 +80,21 @@ body {
   cursor: pointer;
   transition: background 0.2s;
 }
-.btn:hover {
-  background: #1d4ed8;
-}
-.btn-secondary {
-  background: #e5e7eb;
-  color: #333;
-}
-.btn-secondary:hover {
-  background: #d1d5db;
-}
+.btn:hover { background: #1d4ed8; }
+.btn-secondary { background: #e5e7eb; color: #333; }
+.btn-secondary:hover { background: #d1d5db; }
 
-/* ===== Card / form container ===== */
+/* ===== Card ===== */
 .card {
   background: #ffffff;
   max-width: 420px;
+  width: 100%;
   margin: 40px auto;
   padding: 24px;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  width: 100%;
 }
-.card h2 {
-  margin-bottom: 24px;
-  color: #1a1a2e;
-}
+.card h2 { margin-bottom: 24px; color: #1a1a2e; }
 
 /* ===== Inputs ===== */
 .input {
@@ -112,40 +106,24 @@ body {
   font-size: 15px;
   transition: border 0.2s;
 }
-.input:focus {
-  outline: none;
-  border-color: #2563eb;
-}
+.input:focus { outline: none; border-color: #2563eb; }
 
 /* ===== Messages ===== */
-.message {
-  margin-top: 16px;
-  font-size: 14px;
-}
+.message { margin-top: 16px; font-size: 14px; }
 .message.error { color: #dc2626; }
 .message.success { color: #16a34a; }
 
-/* ===== Page container ===== */
+/* ===== Page ===== */
 .page {
   max-width: 900px;
-  margin: 40px auto;
-  padding: 0 16px;    /* smaller side padding on mobile */
   width: 100%;
+  margin: 40px auto;
+  padding: 0 16px;
 }
 
-/* ===== Status badges ===== */
-.status-active {
-  color: #16a34a;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 20px 0;
-}
-.status-inactive {
-  color: #dc2626;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 20px 0;
-}
+/* ===== Status ===== */
+.status-active { color: #16a34a; font-size: 18px; font-weight: 600; margin: 20px 0; }
+.status-inactive { color: #dc2626; font-size: 18px; font-weight: 600; margin: 20px 0; }
 
 /* ===== Video cards ===== */
 .video-card {
@@ -155,49 +133,32 @@ body {
   margin-bottom: 24px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
-.video-card h3 {
-  margin-bottom: 8px;
-}
-.video-card p {
-  color: #666;
-  margin-bottom: 12px;
-}
-.video-card video {
-  width: 100%;
-  border-radius: 8px;
-}
+.video-card h3 { margin-bottom: 8px; }
+.video-card p { color: #666; margin-bottom: 12px; }
+.video-card video { width: 100%; border-radius: 8px; }
 
+/* ===== Table wrapper (for admin tables) ===== */
+.table-wrap { width: 100%; overflow-x: auto; }
 
-.card {
-  max-width: 420px;
-  width: 100%;
-  margin: 40px auto;
-  padding: 24px;     /* was 40px — smaller for mobile */
+/* ===== MOBILE ===== */
+@media (max-width: 700px) {
+  .navbar-top { width: 100%; }
+  .hamburger { display: block; }
+  .navbar-links {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .navbar-links.open { display: flex; }
 }
 
 @media (max-width: 600px) {
-  .brand {
-    font-size: 1.5rem;   /* smaller brand on phones */
-  }
-
-  .navbar {
-    padding: 12px 16px;  /* less padding on phones */
-  }
-
-  .page {
-    padding: 0 12px;
-  }
-
-  h2 {
-    font-size: 1.4rem;   /* smaller headings on phones */
-  }
-
-  table {
-    font-size: 13px;     /* tables are common overflow culprits */
-  }
-}
-
-.table-wrap {
-  width: 100%;
-  overflow-x: auto;    /* table scrolls sideways within its box */
+  .brand { font-size: 1.5rem; }
+  .navbar { padding: 12px 16px; }
+  .page { padding: 0 12px; }
+  h2 { font-size: 1.4rem; }
+  table { font-size: 13px; }
 }

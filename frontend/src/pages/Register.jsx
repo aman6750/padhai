@@ -31,6 +31,7 @@ function Register() {
         placeholder="Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
       />
       <input
         className="input"
@@ -38,6 +39,7 @@ function Register() {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
       />
       <input
         className="input"
@@ -45,6 +47,7 @@ function Register() {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
       />
       <button className="btn" onClick={handleRegister}>Register</button>
       {message && <p className={`message ${isError ? 'error' : 'success'}`}>{message}</p>}
