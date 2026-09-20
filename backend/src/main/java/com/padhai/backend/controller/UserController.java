@@ -3,22 +3,34 @@ import java.util.List;
 import com.padhai.backend.entity.User;
 import com.padhai.backend.service.UserService;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import java.util.List;
-import java.util.Map;
 import com.padhai.backend.entity.Subject;
 import java.util.Set;
+import com.padhai.backend.repository.SubjectRepository;
+import com.padhai.backend.repository.NoteRepository;
+import com.padhai.backend.repository.TestRepository;
+import com.padhai.backend.repository.VideoRepository;
+import com.padhai.backend.repository.SubscriptionRepository;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final SubjectRepository subjectRepository;
+    private final NoteRepository noteRepository;
+    private final TestRepository testRepository;
+    private final VideoRepository videoRepository;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService,SubjectRepository subjectRepository,NoteRepository noteRepository,TestRepository testRepository,VideoRepository videoRepository) {
         this.userService = userService;
+        this.subjectRepository = subjectRepository;
+        this.noteRepository = noteRepository;
+        this.testRepository = testRepository;
+        this.videoRepository = videoRepository;
     }
 
     @PostMapping("/register")
@@ -88,6 +100,32 @@ public class UserController {
                 .getAuthentication().getPrincipal();
         User user = userService.getByEmail(email);
         return user.getSubjects();
+    }
+
+    // platform-wide stats — ADMIN only
+    @GetMapping("/admin/stats")
+    public Map<String, Object> adminStats() {
+        String email = (String) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        User admin = userService.getByEmail(email);
+        if (!"ADMIN".equals(admin.getRole())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "Admins only");
+        }
+
+        List<User> allUsers = userService.getAllUsers();
+        long students = allUsers.stream().filter(u -> "USER".equals(u.getRole())).count();
+        long teachers = allUsers.stream().filter(u -> "TEACHER".equals(u.getRole())).count();
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalUsers", allUsers.size());
+        stats.put("students", students);
+        stats.put("teachers", teachers);
+        stats.put("subjects", subjectRepository.count());
+        stats.put("notes", noteRepository.count());
+        stats.put("tests", testRepository.count());
+        stats.put("videos", videoRepository.count());
+        return stats;
     }
 
 }

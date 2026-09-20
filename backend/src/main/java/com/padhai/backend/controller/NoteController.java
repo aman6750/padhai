@@ -17,8 +17,9 @@ import com.padhai.backend.service.PdfWatermarkService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
+import java.util.Map;
 import java.util.List;
+import com.padhai.backend.entity.Subject;
 
 @RestController
 @RequestMapping("/api/notes")
@@ -136,5 +137,16 @@ public class NoteController {
         headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=note.pdf");
 
         return new ResponseEntity<>(watermarked, headers, org.springframework.http.HttpStatus.OK);
+    }
+
+    // count notes across the teacher's subjects
+    @GetMapping("/my-subject-notes/count")
+    public Map<String, Integer> myNoteCount() {
+        User user = currentUser();
+        int count = 0;
+        for (Subject s : user.getSubjects()) {
+            count += noteRepository.findBySubjectId(s.getId()).size();
+        }
+        return Map.of("count", count);
     }
 }

@@ -9,14 +9,24 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    try {
-      const response = await api.post('/api/users/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      navigate('/dashboard');
-    } catch (error) {
-      setMessage('Invalid email or password');
-    }
-  };
+  try {
+    const response = await api.post('/api/users/login', { email, password });
+    localStorage.setItem('token', response.data.token);
+
+    // Check role and redirect accordingly
+    const roleRes = await api.get('/api/users/me/role');
+    const role = roleRes.data.role;
+    if (role === 'TEACHER') {
+  navigate('/teacher-home');
+} else if (role === 'ADMIN') {
+  navigate('/admin-home');   // changed from /admin
+} else {
+  navigate('/dashboard');
+}
+  } catch (error) {
+    setMessage('Invalid email or password');
+  }
+};
 
   return (
     <div className="card">

@@ -20,6 +20,8 @@ import Privacy from './pages/legal/Privacy';
 import Refund from './pages/legal/Refund';
 import Contact from './pages/legal/Contact';
 import Pricing from './pages/legal/Pricing';
+import TeacherDashboard from './pages/TeacherDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -69,9 +71,11 @@ function NavBar() {
             <Link to="/notes" onClick={closeMenu}>Notes</Link>
             <Link to="/tests" onClick={closeMenu}>Tests</Link>
             <Link to="/doubts" onClick={closeMenu}>Doubts</Link>
+            {role === 'TEACHER' && <Link to="/teacher-home" onClick={closeMenu}>My Dashboard</Link>}
             {role === 'TEACHER' && <Link to="/teacher/notes" onClick={closeMenu}>Add Notes</Link>}
             {role === 'TEACHER' && <Link to="/teacher/tests" onClick={closeMenu}>Manage Tests</Link>}
             {role === 'ADMIN' && <Link to="/admin" onClick={closeMenu}>Admin</Link>}
+            {role === 'ADMIN' && <Link to="/admin-home" onClick={closeMenu}>My Dashboard</Link>}
             {role === 'ADMIN' && <Link to="/admin/subjects" onClick={closeMenu}>Subjects</Link>}
             {role === 'ADMIN' && <Link to="/admin/teachers" onClick={closeMenu}>Teachers</Link>}
             <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
@@ -94,7 +98,9 @@ function App() {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/teacher-home" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/admin-home" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
         <Route path="/admin/subjects" element={<ProtectedRoute><ManageSubjects /></ProtectedRoute>} />

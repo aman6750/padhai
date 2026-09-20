@@ -13,8 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.padhai.backend.entity.TestAttempt;
 import java.util.List;
+import com.padhai.backend.entity.Subject;
 
 @RestController
 @RequestMapping("/api/tests")
@@ -148,4 +149,24 @@ public class TestController {
                 "total", questions.size()
         );
     }
+
+    // get the logged-in student's own test attempts
+    @GetMapping("/my-attempts")
+    public List<TestAttempt> myAttempts() {
+        User user = currentUser();
+        return testAttemptRepository.findByUserId(user.getId());
+    }
+
+    // in TestController — count tests the teacher created across their subjects
+    @GetMapping("/my-subject-tests/count")
+    public Map<String, Integer> myTestCount() {
+        User user = currentUser();
+        int count = 0;
+        for (Subject s : user.getSubjects()) {
+            count += testRepository.findBySubjectId(s.getId()).size();
+        }
+        return Map.of("count", count);
+    }
+
+
 }

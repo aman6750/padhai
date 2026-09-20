@@ -46,28 +46,30 @@ public class VideoController {
     public List<Video> getVideos() {
         User user = currentUser();
 
-        if (!subscriptionService.isSubscriptionActive(user.getId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
+        // Admins and teachers bypass the subscription check
+        boolean privileged = "ADMIN".equals(user.getRole()) || "TEACHER".equals(user.getRole());
+        if (!privileged && !subscriptionService.isSubscriptionActive(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "You need an active subscription to watch videos");
         }
 
         return videoService.getAllVideos();
     }
 
-    // the new endpoint — get an OTP for a specific video, ONLY if subscribed
+    // get an OTP for a specific video — subscribers, OR admins/teachers
     @GetMapping("/{videoId}/otp")
     public Map<String, Object> getVideoOtp(@PathVariable String videoId) {
         User user = currentUser();
 
-        // Reuse your existing subscription gate!
-        if (!subscriptionService.isSubscriptionActive(user.getId())) {
+        // Admins and teachers bypass the subscription check
+        boolean privileged = "ADMIN".equals(user.getRole()) || "TEACHER".equals(user.getRole());
+        if (!privileged && !subscriptionService.isSubscriptionActive(user.getId())) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "You need an active subscription to watch videos");
         }
 
-        // Subscribed → get a playback token from VdoCipher
+        // Subscribed or privileged → get a playback token from VdoCipher
         return vdoCipherService.getOtp(videoId);
     }
 
