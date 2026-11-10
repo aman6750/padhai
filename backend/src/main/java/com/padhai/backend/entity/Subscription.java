@@ -16,6 +16,8 @@ public class Subscription {
     // Which user this subscription belongs to
     private Long userId;
 
+    private Long classId;
+
     private LocalDate startDate;
 
     private LocalDate endDate;

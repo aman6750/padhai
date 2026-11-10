@@ -12,8 +12,10 @@ public class Subject {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+
     private String name;   // e.g. "Mathematics", "Science"
 
     private String description;
+
+    private Long classId;
 }
