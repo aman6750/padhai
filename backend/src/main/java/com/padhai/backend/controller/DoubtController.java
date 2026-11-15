@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.padhai.backend.service.ClassAccessService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +21,16 @@ public class DoubtController {
     private final DoubtRepository doubtRepository;
     private final UserService userService;
     private final SubscriptionService subscriptionService;
+    private final ClassAccessService classAccessService;   // NEW
 
     public DoubtController(DoubtRepository doubtRepository,
                            UserService userService,
-                           SubscriptionService subscriptionService) {
+                           SubscriptionService subscriptionService,
+                           ClassAccessService classAccessService) {   // NEW
         this.doubtRepository = doubtRepository;
         this.userService = userService;
         this.subscriptionService = subscriptionService;
+        this.classAccessService = classAccessService;               // NEW
     }
 
     private User currentUser() {
@@ -46,6 +49,8 @@ public class DoubtController {
         if (!privileged && !subscriptionService.isSubscriptionActive(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Subscribe to ask doubts");
         }
+        // NEW: student can't post in another class's subject
+        classAccessService.requireSubjectAccess(user, subjectId);
 
         // If teacher, they can only post in their assigned subjects
         if ("TEACHER".equals(user.getRole())) {
@@ -73,6 +78,8 @@ public class DoubtController {
         if (!privileged && !subscriptionService.isSubscriptionActive(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Subscribe to view doubts");
         }
+        // NEW: student can't read another class's doubts
+        classAccessService.requireSubjectAccess(user, subjectId);
         return doubtRepository.findBySubjectIdOrderByCreatedAtAsc(subjectId);
     }
 }

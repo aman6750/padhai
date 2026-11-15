@@ -24,4 +24,8 @@ public class Video {
 
     // For ordering lessons (1, 2, 3...)
     private Integer orderIndex;
+
+    // Which subject this video belongs to.
+    // subject → has a classId, so the video belongs to that class too.
+    private Long subjectId;
 }

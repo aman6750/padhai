@@ -11,6 +11,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+// List of HTTP methods (GET, POST, ...) so we can open only GET
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -40,6 +42,9 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/register", "/api/users/login", "/hello").permitAll()
+                        // Anyone can READ the class list (Register page has no login yet).
+                        // Only GET is open: creating a class (POST) still needs login + admin.
+                        .requestMatchers(HttpMethod.GET, "/api/classes").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

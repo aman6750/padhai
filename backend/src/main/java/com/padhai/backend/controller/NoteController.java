@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Map;
 import java.util.List;
 import com.padhai.backend.entity.Subject;
+import com.padhai.backend.service.ClassAccessService;   // the class check
 
 @RestController
 @RequestMapping("/api/notes")
@@ -30,17 +31,20 @@ public class NoteController {
     private final SubscriptionService subscriptionService;
     private final CloudinaryService cloudinaryService;
     private final PdfWatermarkService pdfWatermarkService;
+    private final ClassAccessService classAccessService;   // NEW
 
     public NoteController(NoteRepository noteRepository,
                           UserService userService,
                           SubscriptionService subscriptionService,
                           CloudinaryService cloudinaryService,
-                          PdfWatermarkService pdfWatermarkService) {
+                          PdfWatermarkService pdfWatermarkService,
+                          ClassAccessService classAccessService) {   // NEW parameter
         this.noteRepository = noteRepository;
         this.userService = userService;
         this.subscriptionService = subscriptionService;
         this.cloudinaryService = cloudinaryService;
         this.pdfWatermarkService = pdfWatermarkService;
+        this.classAccessService = classAccessService;              // NEW: store it
     }
 
     private User currentUser() {
@@ -99,6 +103,8 @@ public class NoteController {
                     "You need an active subscription to view notes");
         }
 
+        // NEW: Class 9 student asking for Class 10 notes → 403
+        classAccessService.requireSubjectAccess(user, subjectId);
         return noteRepository.findBySubjectId(subjectId);
     }
 
@@ -127,6 +133,11 @@ public class NoteController {
 
         Note note = noteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
+        // NEW: protects the PDF itself. Even if a student knows a note id from
+        // another class, opening it is refused. Uses the NOTE's subject.
+        classAccessService.requireSubjectAccess(user, note.getSubjectId());
+
+        // Watermark with the student's email
 
         // Watermark with the student's email
         byte[] watermarked = pdfWatermarkService.watermarkPdf(note.getFileUrl(), user.getEmail());

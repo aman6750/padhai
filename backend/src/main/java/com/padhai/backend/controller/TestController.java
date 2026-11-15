@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.padhai.backend.entity.TestAttempt;
 import java.util.List;
 import com.padhai.backend.entity.Subject;
+import com.padhai.backend.service.ClassAccessService;
 
 @RestController
 @RequestMapping("/api/tests")
@@ -26,17 +27,20 @@ public class TestController {
     private final UserService userService;
     private final TestAttemptRepository testAttemptRepository;
     private final SubscriptionService subscriptionService;
+    private final ClassAccessService classAccessService;   // NEW
 
     public TestController(TestRepository testRepository,
                           QuestionRepository questionRepository,
                           UserService userService,
                           TestAttemptRepository testAttemptRepository,
-                          SubscriptionService subscriptionService) {
+                          SubscriptionService subscriptionService,
+                          ClassAccessService classAccessService) {   // NEW
         this.testRepository = testRepository;
         this.questionRepository = questionRepository;
         this.userService = userService;
         this.testAttemptRepository = testAttemptRepository;
         this.subscriptionService = subscriptionService;
+        this.classAccessService = classAccessService;              // NEW
     }
 
     private User currentUser() {
@@ -76,18 +80,23 @@ public class TestController {
         return questionRepository.save(question);
     }
 
-    // List tests for a subject (anyone logged in can see the list)
+    // List tests for a subject: students only for their OWN class
     @GetMapping("/subject/{subjectId}")
     public List<Test> getTestsForSubject(@PathVariable Long subjectId) {
+        classAccessService.requireSubjectAccess(currentUser(), subjectId);   // NEW
         return testRepository.findBySubjectId(subjectId);
     }
 
-    // Get questions for a test (for the teacher to review, or when taking)
+    // Questions WITH correct answers: teachers/admins ONLY.
+    // Before, any student could call this and see the answers!
+    // Students take tests through /take, which hides the answers.
     @GetMapping("/{testId}/questions")
     public List<Question> getQuestions(@PathVariable Long testId) {
+        if (!classAccessService.isPrivileged(currentUser())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Teachers and admins only");
+        }
         return questionRepository.findByTestId(testId);
     }
-
 
     // STUDENT: get questions WITHOUT answers — checks free/paid access
     @GetMapping("/{testId}/take")
@@ -95,7 +104,8 @@ public class TestController {
         User user = currentUser();
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found"));
-
+        // NEW: student can't open another class's test (even a free one)
+        classAccessService.requireSubjectAccess(user, test.getSubjectId());
         // If the test is paid, require an active subscription
         if (!Boolean.TRUE.equals(test.getIsFree())) {
             boolean privileged = "ADMIN".equals(user.getRole()) || "TEACHER".equals(user.getRole());
@@ -125,6 +135,11 @@ public class TestController {
     public Map<String, Object> submitTest(@PathVariable Long testId,
                                           @RequestBody Map<Long, String> answers) {
         User user = currentUser();
+        // NEW: load the test to know its subject (and class); wrong id → 404
+        Test test = testRepository.findById(testId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found"));
+        // NEW: can't submit answers for another class's test
+        classAccessService.requireSubjectAccess(user, test.getSubjectId());
         List<Question> questions = questionRepository.findByTestId(testId);
 
         int score = 0;

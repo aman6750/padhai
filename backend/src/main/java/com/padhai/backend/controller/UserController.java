@@ -14,6 +14,9 @@ import com.padhai.backend.repository.VideoRepository;
 import com.padhai.backend.repository.SubscriptionRepository;
 import java.util.Map;
 import java.util.HashMap;
+import com.padhai.backend.repository.ClassRepository;          // look up class name
+import org.springframework.http.HttpStatus;                    // error codes like 403, 400
+import org.springframework.web.server.ResponseStatusException; // send those errors
 
 @RestController
 @RequestMapping("/api/users")
@@ -25,7 +28,12 @@ public class UserController {
     private final TestRepository testRepository;
     private final VideoRepository videoRepository;
 
-    public UserController(UserService userService,SubjectRepository subjectRepository,NoteRepository noteRepository,TestRepository testRepository,VideoRepository videoRepository) {
+    // NEW field
+    private final ClassRepository classRepository;
+
+    public UserController(UserService userService,SubjectRepository subjectRepository,NoteRepository noteRepository,TestRepository testRepository,VideoRepository videoRepository,
+                          ClassRepository classRepository) {   // NEW parameter
+        this.classRepository = classRepository;               // NEW: store it
         this.userService = userService;
         this.subjectRepository = subjectRepository;
         this.noteRepository = noteRepository;
@@ -45,11 +53,55 @@ public class UserController {
         return Map.of("token", token);
     }
 
+    // GET /api/users/me → details of the logged-in user, now including class
     @GetMapping("/me")
-    public Map<String, String> me() {
+    public Map<String, Object> me() {
+        User user = loggedInUser();
+        // HashMap (not Map.of) because Map.of crashes on null values,
+        // and classId is null for teachers/admins/new students
+        Map<String, Object> me = new HashMap<>();
+        me.put("email", user.getEmail());
+        me.put("name", user.getName());
+        me.put("role", user.getRole());
+        me.put("classId", user.getClassId());
+        // Class name e.g. "Class 10": if no class → null, else look it up
+        me.put("className", user.getClassId() == null ? null
+                : classRepository.findById(user.getClassId()).map(c -> c.getName()).orElse(null));
+        return me;
+    }
+
+    // PUT /api/users/me/class  body: {"classId": 2}
+    // A student picks their class ONCE (for students who registered before classes existed).
+    @PutMapping("/me/class")
+    public User setMyClass(@RequestBody Map<String, Long> body) {
+        User user = loggedInUser();
+        // Already has a class → refuse, so a Class 9 student can't switch to Class 10 themselves
+        if (user.getClassId() != null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Class already set. Contact admin to change it.");
+        }
+        Long classId = body.get("classId");
+        // Missing or fake class id → 400 Bad Request
+        if (classId == null || !classRepository.existsById(classId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a valid class");
+        }
+        return userService.setClassId(user.getId(), classId);
+    }
+
+    // PUT /api/users/{userId}/class  body: {"classId": 2}  (or null to clear)
+    // ADMIN changes any user's class.
+    @PutMapping("/{userId}/class")
+    public User setUserClass(@PathVariable Long userId, @RequestBody Map<String, Long> body) {
+        if (!"ADMIN".equals(loggedInUser().getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admins only");
+        }
+        return userService.setClassId(userId, body.get("classId"));
+    }
+
+    // Helper: the user who sent this request (email comes from the login token)
+    private User loggedInUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = (String) auth.getPrincipal();
-        return Map.of("email", email);
+        return userService.getByEmail((String) auth.getPrincipal());
     }
 
     @GetMapping("/me/role")

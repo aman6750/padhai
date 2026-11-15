@@ -1,5 +1,6 @@
 package com.padhai.backend.entity;
-
+// Lets us hide the password in API responses
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.HashSet;
@@ -19,7 +20,14 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    // WRITE_ONLY = password can come IN (register), but is never sent OUT in responses
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
+    // The student's class (id from the "classes" table).
+    // Hibernate creates a "class_id" column in "users" automatically.
+    // Teachers/admins leave this empty because they can see every class.
+    private Long classId;
 
     @Column(nullable = false)
     private String role = "USER";   // "USER", "TEACHER", or "ADMIN"
