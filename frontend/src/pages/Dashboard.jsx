@@ -6,6 +6,38 @@ function Dashboard() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [attempts, setAttempts] = useState([]);
+    // NEW: logged-in user's details from /api/users/me (name, role, classId, className)
+  const [me, setMe] = useState(null);
+  // NEW: class list, only needed if the student has no class yet
+  const [classes, setClasses] = useState([]);
+  // NEW: class id picked in the "Choose your class" box
+  const [chosenClass, setChosenClass] = useState('');
+
+  // NEW: load the user; if it's a student WITHOUT a class, also load the class list
+  const loadMe = async () => {
+    try {
+      const res = await api.get('/api/users/me');
+      setMe(res.data);
+      if (res.data.role === 'USER' && !res.data.classId) {
+        const cls = await api.get('/api/classes');
+        setClasses(cls.data);
+      }
+    } catch {
+      setMe(null);   // on error, just don't show the class part
+    }
+  };
+
+  // NEW: save the picked class (Step 4: PUT /api/users/me/class)
+  const saveClass = async () => {
+    if (!chosenClass) return;   // nothing picked → do nothing
+    try {
+      await api.put('/api/users/me/class', { classId: parseInt(chosenClass) });
+      setMessage('Class saved!');
+      loadMe();   // reload → the box disappears and "Your class: ..." shows
+    } catch {
+      setMessage('Could not save class. Please try again.');
+    }
+  };
 
   const checkStatus = async () => {
     try {
@@ -30,6 +62,7 @@ function Dashboard() {
   useEffect(() => {
     checkStatus();
     loadAttempts();
+    loadMe();        // NEW: load the user's class when the Dashboard opens
   }, []);
 
   const handlePayment = async () => {
@@ -84,7 +117,25 @@ function Dashboard() {
   return (
     <div className="page">
       <h2>Dashboard</h2>
-
+            {/* NEW: only for students (role USER).
+          me?.role → "?." means: if me isn't loaded yet (null), don't crash */}
+      {me?.role === 'USER' && (
+        me.classId ? (
+          // Has a class → just show it
+          <p style={{ color: '#444' }}>🎓 Your class: <strong>{me.className}</strong></p>
+        ) : (
+          // No class yet (old students) → let them pick ONCE
+          <div className="card" style={{ margin: '0 0 24px 0', maxWidth: '100%' }}>
+            <h3>Choose your class</h3>
+            <p style={{ color: '#666' }}>You'll see videos, notes, tests and doubts for this class only.</p>
+            <select className="input" value={chosenClass} onChange={(e) => setChosenClass(e.target.value)}>
+              <option value="">Select your class</option>
+              {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <button className="btn" onClick={saveClass}>Save Class</button>
+          </div>
+        )
+      )}
       {/* Subscription status */}
       {isSubscribed ? (
         <p className="status-active">✅ You are subscribed! You can access all content.</p>
