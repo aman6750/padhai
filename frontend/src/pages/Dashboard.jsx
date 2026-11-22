@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import SchoolClassPicker from '../components/SchoolClassPicker';
 
 function Dashboard() {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -8,8 +9,7 @@ function Dashboard() {
   const [attempts, setAttempts] = useState([]);
     // NEW: logged-in user's details from /api/users/me (name, role, classId, className)
   const [me, setMe] = useState(null);
-  // NEW: class list, only needed if the student has no class yet
-  const [classes, setClasses] = useState([]);
+  
   // NEW: class id picked in the "Choose your class" box
   const [chosenClass, setChosenClass] = useState('');
 
@@ -18,10 +18,7 @@ function Dashboard() {
     try {
       const res = await api.get('/api/users/me');
       setMe(res.data);
-      if (res.data.role === 'USER' && !res.data.classId) {
-        const cls = await api.get('/api/classes');
-        setClasses(cls.data);
-      }
+      
     } catch {
       setMe(null);   // on error, just don't show the class part
     }
@@ -126,12 +123,10 @@ function Dashboard() {
         ) : (
           // No class yet (old students) → let them pick ONCE
           <div className="card" style={{ margin: '0 0 24px 0', maxWidth: '100%' }}>
-            <h3>Choose your class</h3>
+            <h3>Choose your school and class</h3>
             <p style={{ color: '#666' }}>You'll see videos, notes, tests and doubts for this class only.</p>
-            <select className="input" value={chosenClass} onChange={(e) => setChosenClass(e.target.value)}>
-              <option value="">Select your class</option>
-              {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            {/* School → class dropdowns; gives us the chosen class id */}
+            <SchoolClassPicker onChange={setChosenClass} />
             <button className="btn" onClick={saveClass}>Save Class</button>
           </div>
         )

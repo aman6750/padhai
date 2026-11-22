@@ -1,158 +1,220 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { classLabel } from '../utils/subjectLabel';   // "LPS · Class 10"
 
 function ManageSubjects() {
-  // Lists that come from the backend
+  // Lists from the backend
+  const [schools, setSchools] = useState([]);
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  // Info / error line shown at the top
   const [message, setMessage] = useState('');
 
-  // "Add Class" form boxes
+  // "Add School" box
+  const [schoolName, setSchoolName] = useState('');
+
+  // "Add Class" boxes
+  const [classSchoolId, setClassSchoolId] = useState('');
   const [className, setClassName] = useState('');
   const [classOrder, setClassOrder] = useState('');
 
-  // "Add Subject" form boxes
+  // "Add Subject" boxes
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [classId, setClassId] = useState('');
 
-  // GET /api/classes → all classes in order (Step 3)
+  const loadSchools = async () => {
+    try { setSchools((await api.get('/api/schools')).data); } catch { setSchools([]); }
+  };
   const loadClasses = async () => {
-    try {
-      const res = await api.get('/api/classes');
-      setClasses(res.data);
-    } catch { setClasses([]); }
+    try { setClasses((await api.get('/api/classes')).data); } catch { setClasses([]); }
   };
-
-  // GET /api/subjects → admin gets ALL subjects of all classes (Step 5)
   const loadSubjects = async () => {
-    try {
-      const res = await api.get('/api/subjects');
-      setSubjects(res.data);
-    } catch { setSubjects([]); }
+    try { setSubjects((await api.get('/api/subjects')).data); } catch { setSubjects([]); }
   };
 
-  // Load both once when the page opens
+  // Load everything once when the page opens
   useEffect(() => {
+    loadSchools();
     loadClasses();
     loadSubjects();
   }, []);
 
-  // Create a class: POST /api/classes (admin only)
+  // ---------- Schools ----------
+  const addSchool = async () => {
+    if (!schoolName.trim()) { setMessage('Please enter a school name (e.g. LPS).'); return; }
+    try {
+      await api.post('/api/schools', { name: schoolName });
+      setMessage(`${schoolName} added!`);
+      setSchoolName('');
+      loadSchools();
+    } catch {
+      setMessage('Failed to add school.');
+    }
+  };
+
+  // ---------- Classes ----------
   const addClass = async () => {
-    // Empty name → stop. trim() ignores spaces
+    if (!classSchoolId) { setMessage('Please choose the school for this class.'); return; }
     if (!className.trim()) { setMessage('Please enter a class name (e.g. Class 10).'); return; }
     try {
       await api.post('/api/classes', {
+        schoolId: parseInt(classSchoolId),
         name: className,
-        // Use the order typed; if empty, put the class at the end
+        // order typed, or put it at the end
         orderIndex: parseInt(classOrder) || classes.length + 1,
       });
       setMessage(`${className} added!`);
-      setClassName(''); setClassOrder('');   // clear the boxes
-      loadClasses();                         // refresh the list
-    } catch (error) {
-      setMessage(error.response?.status === 403 ? 'Only admin can add classes.' : 'Failed to add class.');
+      setClassName(''); setClassOrder('');
+      loadClasses();
+    } catch {
+      setMessage('Failed to add class.');
     }
   };
 
-  // Create a subject inside a class: POST /api/subjects/add
-  const addSubject = async () => {
-    if (!classId) { setMessage('Please choose the class for this subject.'); return; }
+  // Put an existing class (made before schools existed) into a school
+  const moveClass = async (cls, newSchoolId) => {
+    if (!newSchoolId) return;
     try {
-      // parseInt: dropdown gives "2" (text), backend wants 2 (number)
-      await api.post('/api/subjects/add', { name, description, classId: parseInt(classId) });
-      setMessage('Subject added!');
-      setName(''); setDescription('');
-      loadSubjects();
-    } catch (error) {
-      setMessage(error.response?.status === 403 ? 'Only admin can add subjects.' : 'Failed to add subject.');
-    }
-  };
-
-  // Move a subject to another class: PUT /api/subjects/{id} (Step 5)
-  const moveSubject = async (subject, newClassId) => {
-    if (!newClassId) return;   // "Choose class…" picked → ignore
-    try {
-      await api.put(`/api/subjects/${subject.id}`, { classId: parseInt(newClassId) });
-      loadSubjects();
+      await api.put(`/api/classes/${cls.id}`, { schoolId: parseInt(newSchoolId) });
+      loadClasses();
+      loadSubjects();   // subject labels now include the school
     } catch {
       setMessage('Failed to update class.');
     }
   };
 
-  // Subjects with NO class yet (your old subjects) → shown first, in red
-  const unassigned = subjects.filter((s) => !s.classId);
-  // For each class: { cls: the class, items: its subjects }
-  const groups = classes.map((c) => ({ cls: c, items: subjects.filter((s) => s.classId === c.id) }));
+  // ---------- Subjects ----------
+  const addSubject = async () => {
+    if (!classId) { setMessage('Please choose the class for this subject.'); return; }
+    try {
+      await api.post('/api/subjects/add', { name, description, classId: parseInt(classId) });
+      setMessage('Subject added!');
+      setName(''); setDescription('');
+      loadSubjects();
+    } catch {
+      setMessage('Failed to add subject.');
+    }
+  };
 
-  // Draws one subject card with a class dropdown
+  const moveSubject = async (subject, newClassId) => {
+    if (!newClassId) return;
+    try {
+      await api.put(`/api/subjects/${subject.id}`, { classId: parseInt(newClassId) });
+      loadSubjects();
+    } catch {
+      setMessage('Failed to update subject.');
+    }
+  };
+
+  // Classes with no school yet (made before schools existed) → shown in red
+  const classesWithoutSchool = classes.filter((c) => !c.schoolId);
+  // Subjects with no class yet → shown in red
+  const subjectsWithoutClass = subjects.filter((s) => !s.classId);
+
+  // One subject card with a "move to class" dropdown
   const subjectCard = (s) => (
     <div key={s.id} className="video-card">
       <h3>{s.name}</h3>
       <p>{s.description}</p>
-      <p style={{ fontSize: '13px', color: '#999' }}>ID: {s.id}</p>
-      {/* value = current class (?? '' means: use '' if null). Changing it moves the subject */}
-      <select className="input" style={{ maxWidth: '260px', margin: 0 }}
+      <select className="input" style={{ maxWidth: '300px', margin: 0 }}
         value={s.classId ?? ''} onChange={(e) => moveSubject(s, e.target.value)}>
         <option value="">Choose class…</option>
-        {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        {classes.map((c) => <option key={c.id} value={c.id}>{classLabel(c)}</option>)}
       </select>
     </div>
   );
 
   return (
     <div className="page">
-      <h2>Manage Classes & Subjects</h2>
+      <h2>Schools, Classes & Subjects</h2>
       {message && <p className="message">{message}</p>}
 
-      {/* ---- Classes ---- */}
+      {/* ---------- 1. Schools ---------- */}
       <div className="card" style={{ margin: '0 0 24px 0', maxWidth: '100%' }}>
-        <h3>Classes ({classes.length})</h3>
-        {/* Shows "Class 9 · Class 10", or a hint if there are none */}
+        <h3>1. Schools ({schools.length})</h3>
         <p style={{ color: '#666' }}>
-          {classes.length ? classes.map((c) => c.name).join(' · ') : 'No classes yet. Add your first class below.'}
+          {schools.length ? schools.map((s) => s.name).join(' · ') : 'No schools yet. Add your first school below.'}
         </p>
+        <input className="input" placeholder="School name (e.g. LPS)"
+          value={schoolName} onChange={(e) => setSchoolName(e.target.value)} />
+        <button className="btn" onClick={addSchool}>Add School</button>
+      </div>
+
+      {/* ---------- 2. Classes ---------- */}
+      <div className="card" style={{ margin: '0 0 24px 0', maxWidth: '100%' }}>
+        <h3>2. Classes ({classes.length})</h3>
+        <select className="input" value={classSchoolId} onChange={(e) => setClassSchoolId(e.target.value)}>
+          <option value="">Select school</option>
+          {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
         <input className="input" placeholder="Class name (e.g. Class 10)"
           value={className} onChange={(e) => setClassName(e.target.value)} />
         <input className="input" placeholder="Order (e.g. 10) — used to sort classes"
           value={classOrder} onChange={(e) => setClassOrder(e.target.value)} />
         <button className="btn" onClick={addClass}>Add Class</button>
+
+        {/* Classes of each school */}
+        {schools.map((s) => (
+          <p key={s.id} style={{ color: '#444', marginTop: '12px' }}>
+            <strong>{s.name}:</strong>{' '}
+            {classes.filter((c) => c.schoolId === s.id).map((c) => c.name).join(' · ') || 'no classes yet'}
+          </p>
+        ))}
+
+        {/* Old classes without a school → choose one */}
+        {classesWithoutSchool.length > 0 && (
+          <div style={{ marginTop: '16px' }}>
+            <p style={{ color: '#dc2626' }}>
+              These classes have no school yet. Students can't pick them until you choose one:
+            </p>
+            {classesWithoutSchool.map((c) => (
+              <div key={c.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
+                <strong>{c.name}</strong>
+                <select className="input" style={{ maxWidth: '220px', margin: 0 }}
+                  value="" onChange={(e) => moveClass(c, e.target.value)}>
+                  <option value="">Choose school…</option>
+                  {schools.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ---- Add subject ---- */}
+      {/* ---------- 3. Add subject ---------- */}
       <div className="card" style={{ margin: '0 0 24px 0', maxWidth: '100%' }}>
-        <h3>Add Subject</h3>
+        <h3>3. Add Subject</h3>
         <select className="input" value={classId} onChange={(e) => setClassId(e.target.value)}>
-          <option value="">Select class</option>
-          {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          <option value="">Select school & class</option>
+          {classes.map((c) => <option key={c.id} value={c.id}>{classLabel(c)}</option>)}
         </select>
         <input className="input" placeholder="Subject name (e.g. Mathematics)"
           value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="input" placeholder="Description"
+        <input className="input" placeholder="Description (e.g. book name / syllabus)"
           value={description} onChange={(e) => setDescription(e.target.value)} />
         <button className="btn" onClick={addSubject}>Add Subject</button>
       </div>
 
+      {/* ---------- All subjects, grouped by school → class ---------- */}
       <h3>All Subjects ({subjects.length})</h3>
 
-      {/* Old subjects without a class (only shown if there are any) */}
-      {unassigned.length > 0 && (
+      {subjectsWithoutClass.length > 0 && (
         <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ color: '#dc2626' }}>No class set ({unassigned.length})</h3>
+          <h3 style={{ color: '#dc2626' }}>No class set ({subjectsWithoutClass.length})</h3>
           <p style={{ color: '#666' }}>Students can't see these subjects until you choose a class.</p>
-          {unassigned.map(subjectCard)}
+          {subjectsWithoutClass.map(subjectCard)}
         </div>
       )}
 
-      {/* One section per class with its subjects */}
-      {groups.map(({ cls, items }) => (
-        <div key={cls.id} style={{ marginBottom: '24px' }}>
-          <h3>{cls.name} ({items.length})</h3>
-          {items.map(subjectCard)}
-        </div>
-      ))}
+      {classes.map((c) => {
+        const items = subjects.filter((s) => s.classId === c.id);
+        return (
+          <div key={c.id} style={{ marginBottom: '24px' }}>
+            <h3>{classLabel(c)} ({items.length})</h3>
+            {items.map(subjectCard)}
+          </div>
+        );
+      })}
     </div>
   );
 }

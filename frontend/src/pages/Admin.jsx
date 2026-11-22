@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { subjectLabel } from '../utils/subjectLabel';   // NEW: "Maths · Class 10"
+import { subjectLabel, classLabel } from '../utils/subjectLabel';
 
 function Admin() {
   const [title, setTitle] = useState('');
@@ -176,7 +176,7 @@ function Admin() {
                   {u.role === 'USER' ? (
                     <select value={u.classId ?? ''} onChange={(e) => changeUserClass(u, e.target.value)}>
                       <option value="">Not set</option>
-                      {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {classes.map((c) => <option key={c.id} value={c.id}>{classLabel(c)}</option>)}
                     </select>
                   ) : 'All classes'}
                 </td>

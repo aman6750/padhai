@@ -1,9 +1,13 @@
-// Makes a label like "Mathematics · Class 10".
-// subject.className comes from the backend automatically (the @Formula in Step 1).
-// "export" = other files can import and use this function.
+// Makes a label like "Mathematics · LPS · Class 10".
+// subject.className comes from the backend automatically (the @Formula).
 export function subjectLabel(subject) {
-  // No subject given → empty text instead of a crash
   if (!subject) return '';
-  // Has a class name → "Name · Class", otherwise just "Name"
   return subject.className ? `${subject.name} · ${subject.className}` : subject.name;
+}
+
+// NEW: makes a class label like "LPS · Class 10".
+// cls.schoolName comes from the backend automatically (the @Formula in ClassEntity).
+export function classLabel(cls) {
+  if (!cls) return '';
+  return cls.schoolName ? `${cls.schoolName} · ${cls.name}` : cls.name;
 }
