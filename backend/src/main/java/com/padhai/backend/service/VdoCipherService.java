@@ -31,4 +31,27 @@ public class VdoCipherService {
         ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
         return response.getBody(); // contains "otp" and "playbackInfo"
     }
+
+    // NEW: ask VdoCipher for a ONE-TIME permission to upload one video file.
+    // Returns {"videoId": "...", "clientPayload": {uploadLink, policy, key, x-amz-...}}
+    // The browser then sends the file straight to clientPayload.uploadLink.
+    // Our secret key stays here on the server; the browser never sees it.
+    public Map<String, Object> createUpload(String title) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Apisecret " + vdocipherSecret);
+        headers.set("Accept", "application/json");
+
+        // PUT https://dev.vdocipher.com/api/videos?title=...
+        // {title} is filled in (and safely URL-encoded) from the last argument
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "https://dev.vdocipher.com/api/videos?title={title}",
+                HttpMethod.PUT,
+                new HttpEntity<>(headers),
+                Map.class,
+                title);
+        return response.getBody();
+    }
+
 }

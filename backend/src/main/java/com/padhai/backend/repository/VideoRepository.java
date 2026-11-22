@@ -18,4 +18,8 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     // Finds a video by its VdoCipher id, so we can check its class
     // before allowing playback.
     Optional<Video> findFirstByVideoUrl(String videoUrl);
+
+
+    // ALL video entries with this VdoCipher id (same lesson added to several classes)
+    List<Video> findByVideoUrl(String videoUrl);
 }

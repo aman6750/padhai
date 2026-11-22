@@ -84,7 +84,7 @@ public class ClassController {
         }
         return classRepository.save(existing);
     }
-    
+
     // DELETE /api/classes/{id} → ADMIN deletes an EMPTY class (e.g. a duplicate)
     @DeleteMapping("/{id}")
     public Map<String, Boolean> deleteClass(@PathVariable Long id) {

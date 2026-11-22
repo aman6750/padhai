@@ -7,6 +7,7 @@ import Videos from './pages/Videos';
 import Admin from './pages/Admin';
 import ManageSubjects from './pages/ManageSubjects';
 import TeacherNotes from './pages/TeacherNotes';
+import TeacherVideos from './pages/TeacherVideos';
 import ProtectedRoute from './components/ProtectedRoute';
 import api from './services/api';
 import StudentNotes from './pages/StudentNotes';
@@ -73,6 +74,7 @@ function NavBar() {
             <Link to="/doubts" onClick={closeMenu}>Doubts</Link>
             {role === 'TEACHER' && <Link to="/teacher-home" onClick={closeMenu}>My Dashboard</Link>}
             {role === 'TEACHER' && <Link to="/teacher/notes" onClick={closeMenu}>Add Notes</Link>}
+            {role === 'TEACHER' && <Link to="/teacher/videos" onClick={closeMenu}>Upload Videos</Link>}
             {role === 'TEACHER' && <Link to="/teacher/tests" onClick={closeMenu}>Manage Tests</Link>}
             {role === 'ADMIN' && <Link to="/admin" onClick={closeMenu}>Admin</Link>}
             {role === 'ADMIN' && <Link to="/admin-home" onClick={closeMenu}>My Dashboard</Link>}
@@ -105,6 +107,7 @@ function App() {
         <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
         <Route path="/admin/subjects" element={<ProtectedRoute><ManageSubjects /></ProtectedRoute>} />
         <Route path="/teacher/notes" element={<ProtectedRoute><TeacherNotes /></ProtectedRoute>} />
+        <Route path="/teacher/videos" element={<ProtectedRoute><TeacherVideos /></ProtectedRoute>} />
         <Route path="/notes" element={<ProtectedRoute><StudentNotes /></ProtectedRoute>} />
         <Route path="/admin/teachers" element={<ProtectedRoute><AssignTeacher /></ProtectedRoute>} />
         <Route path="/test/:testId" element={<ProtectedRoute><TakeTest /></ProtectedRoute>} />
