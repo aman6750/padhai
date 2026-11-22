@@ -83,6 +83,19 @@ function ManageSubjects() {
     }
   };
 
+    // Delete an EMPTY class (e.g. a duplicate). Backend refuses if it has subjects/students.
+  const deleteClass = async (cls) => {
+    if (!window.confirm(`Delete ${classLabel(cls)}?`)) return;
+    try {
+      await api.delete(`/api/classes/${cls.id}`);
+      setMessage(`${classLabel(cls)} deleted.`);
+      loadClasses();
+    } catch (error) {
+      // shows e.g. "This class has subjects. Move or delete them first."
+      setMessage(error.response?.data?.message || 'Failed to delete class.');
+    }
+  };
+
   // ---------- Subjects ----------
   const addSubject = async () => {
     if (!classId) { setMessage('Please choose the class for this subject.'); return; }
@@ -153,13 +166,26 @@ function ManageSubjects() {
           value={classOrder} onChange={(e) => setClassOrder(e.target.value)} />
         <button className="btn" onClick={addClass}>Add Class</button>
 
-        {/* Classes of each school */}
-        {schools.map((s) => (
-          <p key={s.id} style={{ color: '#444', marginTop: '12px' }}>
-            <strong>{s.name}:</strong>{' '}
-            {classes.filter((c) => c.schoolId === s.id).map((c) => c.name).join(' · ') || 'no classes yet'}
-          </p>
-        ))}
+                {/* Classes of each school, each with a small ✕ to delete it */}
+        {schools.map((s) => {
+          const own = classes.filter((c) => c.schoolId === s.id);
+          return (
+            <p key={s.id} style={{ color: '#444', marginTop: '12px' }}>
+              <strong>{s.name}:</strong>{' '}
+              {own.length === 0 && 'no classes yet'}
+              {own.map((c) => (
+                <span key={c.id} style={{ marginRight: '12px', whiteSpace: 'nowrap' }}>
+                  {c.name}
+                  <button onClick={() => deleteClass(c)} title={`Delete ${c.name}`}
+                    style={{ marginLeft: '4px', border: 'none', background: 'none',
+                             color: '#dc2626', cursor: 'pointer', fontSize: '14px' }}>
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </p>
+          );
+        })}
 
         {/* Old classes without a school → choose one */}
         {classesWithoutSchool.length > 0 && (

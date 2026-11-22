@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+    // true if any user is in this class (used before deleting a class)
+    boolean existsByClassId(Long classId);
 }

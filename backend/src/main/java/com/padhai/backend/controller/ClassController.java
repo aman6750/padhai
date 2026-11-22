@@ -1,5 +1,7 @@
 package com.padhai.backend.controller;
-
+import com.padhai.backend.repository.SubjectRepository;
+import com.padhai.backend.repository.UserRepository;
+import java.util.Map;
 import com.padhai.backend.entity.ClassEntity;
 import com.padhai.backend.entity.User;
 import com.padhai.backend.repository.ClassRepository;
@@ -20,13 +22,19 @@ public class ClassController {
 
     private final ClassRepository classRepository;
     private final UserService userService;
-    private final SchoolRepository schoolRepository;   // NEW
+    private final SchoolRepository schoolRepository;
+    private final SubjectRepository subjectRepository;   // NEW: check subjects before delete
+    private final UserRepository userRepository;         // NEW: check students before delete
 
     public ClassController(ClassRepository classRepository, UserService userService,
-                           SchoolRepository schoolRepository) {   // NEW parameter
+                           SchoolRepository schoolRepository,
+                           SubjectRepository subjectRepository,      // NEW
+                           UserRepository userRepository) {          // NEW
         this.classRepository = classRepository;
         this.userService = userService;
-        this.schoolRepository = schoolRepository;                // NEW
+        this.schoolRepository = schoolRepository;
+        this.subjectRepository = subjectRepository;                // NEW
+        this.userRepository = userRepository;                      // NEW
     }
 
     // GET /api/classes            → all classes (admin pages)
@@ -75,6 +83,26 @@ public class ClassController {
             existing.setSchoolId(changes.getSchoolId());
         }
         return classRepository.save(existing);
+    }
+    
+    // DELETE /api/classes/{id} → ADMIN deletes an EMPTY class (e.g. a duplicate)
+    @DeleteMapping("/{id}")
+    public Map<String, Boolean> deleteClass(@PathVariable Long id) {
+        requireAdmin();
+        if (!classRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Class not found");
+        }
+        // Safety: never delete a class that still has subjects or students
+        if (!subjectRepository.findByClassId(id).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This class has subjects. Move or delete them first.");
+        }
+        if (userRepository.existsByClassId(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Students are in this class. Move them to another class first.");
+        }
+        classRepository.deleteById(id);
+        return Map.of("deleted", true);
     }
 
     // Helper: throws 403 unless the logged-in user is ADMIN
