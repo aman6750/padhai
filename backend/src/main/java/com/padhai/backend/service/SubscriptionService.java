@@ -26,6 +26,10 @@ public class SubscriptionService {
     @Value("${razorpay.key.secret}")
     private String razorpayKeySecret;
 
+    // Price in rupees (500 normally; set SUBSCRIPTION_PRICE=10 on Render to test)
+    @Value("${subscription.price}")
+    private int priceRupees;
+
     public SubscriptionService(SubscriptionRepository subscriptionRepository) {
         this.subscriptionRepository = subscriptionRepository;
     }
@@ -59,7 +63,7 @@ public class SubscriptionService {
         RazorpayClient client = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
 
         JSONObject orderRequest = new JSONObject();
-        orderRequest.put("amount", 500 * 100); // amount in paise: ₹500 = 50000 paise
+        orderRequest.put("amount", priceRupees * 100); // rupees → paise (₹10 = 1000 paise)
         orderRequest.put("currency", "INR");
         orderRequest.put("receipt", "receipt_" + System.currentTimeMillis());
 
@@ -90,7 +94,7 @@ public class SubscriptionService {
             String status = payment.get("status");      // e.g. "captured"
 
             // Must be exactly ₹500 (50000 paise) AND successfully captured
-            if (amountPaid != 50000) {
+            if (amountPaid != priceRupees * 100) {   // must match the current price exactly
                 return false; // wrong amount → reject
             }
             if (!"captured".equals(status) && !"authorized".equals(status)) {

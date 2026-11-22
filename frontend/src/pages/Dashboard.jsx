@@ -69,7 +69,7 @@ function Dashboard() {
         ? JSON.parse(orderResponse.data) : orderResponse.data;
 
       const options = {
-        key: 'rzp_live_YOUR_KEY_ID',   // your live Key ID
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,   // your Razorpay Key ID (set on Vercel)
         amount: order.amount,
         currency: order.currency,
         name: 'पढ़AI',
@@ -137,7 +137,7 @@ function Dashboard() {
       ) : (
         <div>
           <p className="status-inactive">❌ You are not subscribed.</p>
-          <button className="btn" onClick={handlePayment}>Pay ₹500 for 1 month</button>
+          <button className="btn" onClick={handlePayment}>Subscribe for 1 month</button>
         </div>
       )}
       {message && <p className="message">{message}</p>}
