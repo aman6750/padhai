@@ -76,7 +76,7 @@ function NavBar() {
             {role === 'TEACHER' && <Link to="/teacher/tests" onClick={closeMenu}>Manage Tests</Link>}
             {role === 'ADMIN' && <Link to="/admin" onClick={closeMenu}>Admin</Link>}
             {role === 'ADMIN' && <Link to="/admin-home" onClick={closeMenu}>My Dashboard</Link>}
-            {role === 'ADMIN' && <Link to="/admin/subjects" onClick={closeMenu}>Subjects</Link>}
+            {role === 'ADMIN' && <Link to="/admin/subjects" onClick={closeMenu}>Classes & Subjects</Link>}
             {role === 'ADMIN' && <Link to="/admin/teachers" onClick={closeMenu}>Teachers</Link>}
             <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
           </>
