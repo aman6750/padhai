@@ -64,9 +64,12 @@ public class UserController {
         me.put("name", user.getName());
         me.put("role", user.getRole());
         me.put("classId", user.getClassId());
-        // Class name e.g. "Class 10": if no class → null, else look it up
+        // Class with its school, e.g. "LPS · Class 10" (null if no class yet).
+        // c.getSchoolName() comes from the @Formula in ClassEntity.
         me.put("className", user.getClassId() == null ? null
-                : classRepository.findById(user.getClassId()).map(c -> c.getName()).orElse(null));
+                : classRepository.findById(user.getClassId())
+                .map(c -> c.getSchoolName() != null ? c.getSchoolName() + " · " + c.getName() : c.getName())
+                .orElse(null));
         return me;
     }
 
