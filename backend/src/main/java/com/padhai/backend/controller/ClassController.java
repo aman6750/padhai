@@ -3,6 +3,7 @@ package com.padhai.backend.controller;
 import com.padhai.backend.entity.ClassEntity;
 import com.padhai.backend.entity.User;
 import com.padhai.backend.repository.ClassRepository;
+import com.padhai.backend.repository.SchoolRepository;   // check the school exists
 import com.padhai.backend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,21 +18,25 @@ import java.util.List;
 @RequestMapping("/api/classes")
 public class ClassController {
 
-    private final ClassRepository classRepository;   // read/save classes
-    private final UserService userService;           // find who is logged in
+    private final ClassRepository classRepository;
+    private final UserService userService;
+    private final SchoolRepository schoolRepository;   // NEW
 
-    // Spring passes both in automatically
-    public ClassController(ClassRepository classRepository, UserService userService) {
+    public ClassController(ClassRepository classRepository, UserService userService,
+                           SchoolRepository schoolRepository) {   // NEW parameter
         this.classRepository = classRepository;
         this.userService = userService;
+        this.schoolRepository = schoolRepository;                // NEW
     }
 
-    // GET /api/classes → all classes sorted by orderIndex
-    // e.g. [{"id":1,"name":"Class 9","orderIndex":9}, {"id":2,"name":"Class 10","orderIndex":10}]
-    // Uses the method you already have in ClassRepository.
-    // Works WITHOUT login (Step 3b), because the Register page needs it.
+    // GET /api/classes            → all classes (admin pages)
+    // GET /api/classes?schoolId=1 → only that school's classes (Register page)
+    // required = false → the ?schoolId= part is optional
     @GetMapping
-    public List<ClassEntity> getClasses() {
+    public List<ClassEntity> getClasses(@RequestParam(required = false) Long schoolId) {
+        if (schoolId != null) {
+            return classRepository.findBySchoolIdOrderByOrderIndexAsc(schoolId);
+        }
         return classRepository.findAllByOrderByOrderIndexAsc();
     }
 
@@ -42,6 +47,10 @@ public class ClassController {
         requireAdmin();                                    // stop if not admin
         if (newClass.getName() == null || newClass.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Class name is required");
+        }
+        // NEW: every class must belong to a school that exists
+        if (newClass.getSchoolId() == null || !schoolRepository.existsById(newClass.getSchoolId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a school for this class");
         }
         newClass.setId(null);                              // always CREATE, never overwrite an existing class
         newClass.setName(newClass.getName().trim());       // remove extra spaces
@@ -58,6 +67,13 @@ public class ClassController {
         if (changes.getName() != null && !changes.getName().isBlank()) existing.setName(changes.getName().trim());
         if (changes.getOrderIndex() != null) existing.setOrderIndex(changes.getOrderIndex());
         if (changes.getDescription() != null) existing.setDescription(changes.getDescription());
+        // NEW: move a class to another school (used for your existing classes)
+        if (changes.getSchoolId() != null) {
+            if (!schoolRepository.existsById(changes.getSchoolId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "School not found");
+            }
+            existing.setSchoolId(changes.getSchoolId());
+        }
         return classRepository.save(existing);
     }
 

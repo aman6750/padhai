@@ -21,9 +21,8 @@ public class Subject {
 
     private Long classId;
 
-    // Not a real column: every time a subject loads, Hibernate runs this SQL
-    // and puts the class's name here, e.g. "Class 10".
-    // Used only to SHOW the class name on the website.
-    @Formula("(select c.name from classes c where c.id = class_id)")
+    // Shows "LPS · Class 10". If the class has no school yet, just "Class 10".
+    // || joins text in PostgreSQL; coalesce(x, '') uses '' when x is null.
+    @Formula("(select coalesce(s.name || ' · ', '') || c.name from classes c left join schools s on s.id = c.school_id where c.id = class_id)")
     private String className;
 }

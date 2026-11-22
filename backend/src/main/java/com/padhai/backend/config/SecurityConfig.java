@@ -45,6 +45,8 @@ public class SecurityConfig {
                         // Anyone can READ the class list (Register page has no login yet).
                         // Only GET is open: creating a class (POST) still needs login + admin.
                         .requestMatchers(HttpMethod.GET, "/api/classes").permitAll()
+                        // Anyone can READ the school list (Register page has no login yet)
+                        .requestMatchers(HttpMethod.GET, "/api/schools").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
