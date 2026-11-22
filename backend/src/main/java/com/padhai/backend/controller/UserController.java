@@ -107,6 +107,21 @@ public class UserController {
         return userService.getByEmail((String) auth.getPrincipal());
     }
 
+    // DELETE /api/users/{userId} → ADMIN deletes a user (permanent)
+    @DeleteMapping("/{userId}")
+    public Map<String, Boolean> deleteUser(@PathVariable Long userId) {
+        if (!"ADMIN".equals(loggedInUser().getRole())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admins only");
+        }
+        try {
+            userService.deleteUser(userId);
+        } catch (RuntimeException e) {
+            // e.g. "Admin accounts can't be deleted" → send it as 400
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+        return Map.of("deleted", true);
+    }
+
     @GetMapping("/me/role")
     public Map<String, String> myRole() {
         String email = (String) SecurityContextHolder.getContext()

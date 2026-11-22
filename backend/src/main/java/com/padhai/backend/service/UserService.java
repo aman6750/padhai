@@ -96,6 +96,19 @@ public class UserService {
         return userRepository.save(user);   // save to database
     }
 
+    // ADMIN deletes a student or teacher account (permanent).
+    // Admin accounts can't be deleted here, so you can't lock yourself out.
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if ("ADMIN".equals(user.getRole())) {
+            throw new RuntimeException("Admin accounts can't be deleted");
+        }
+        // Deletes the user row. Hibernate also removes their teacher-subject links.
+        // Their old doubts/test attempts stay as history (harmless).
+        userRepository.delete(user);
+    }
+
     // Promote a user to teacher and assign subjects
     public User assignTeacher(Long userId, List<Long> subjectIds) {
         User user = userRepository.findById(userId)
