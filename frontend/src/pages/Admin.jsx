@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { subjectLabel, classLabel } from '../utils/subjectLabel';
+import { classLabel, subjectLabel } from '../utils/subjectLabel';
 
 function Admin() {
   const [title, setTitle] = useState('');
@@ -145,3 +145,66 @@ function Admin() {
             <h3>{v.title}</h3>
             <p>{v.description}</p>
             {/* Grey normally; RED if the video has no subject yet */}
+                        <p style={{ fontSize: '13px', color: subj ? '#999' : '#dc2626' }}>
+              {subj ? subjectLabel(subj) : 'No subject — students can\'t see this video'}
+              {' · '}ID: {v.videoUrl} · Order: {v.orderIndex}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <select className="input" style={{ maxWidth: '260px', margin: 0 }}
+                value={v.subjectId ?? ''} onChange={(e) => changeVideoSubject(v, e.target.value)}>
+                <option value="">Move to subject…</option>
+                {subjects.map((s) => <option key={s.id} value={s.id}>{subjectLabel(s)}</option>)}
+              </select>
+              <button className="btn btn-secondary" onClick={() => handleDeleteVideo(v.id)}>Delete</button>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Users table (table-wrap → scrolls on phones) */}
+      <h3 style={{ marginTop: '32px' }}>Users ({users.length})</h3>
+      <div className="card table-wrap" style={{ maxWidth: '100%' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
+              <th style={{ padding: '8px' }}>ID</th>
+              <th style={{ padding: '8px' }}>Name</th>
+              <th style={{ padding: '8px' }}>Email</th>
+              <th style={{ padding: '8px' }}>Role</th>
+              <th style={{ padding: '8px' }}>Class</th>
+              <th style={{ padding: '8px' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ padding: '8px' }}>{u.id}</td>
+                <td style={{ padding: '8px' }}>{u.name}</td>
+                <td style={{ padding: '8px' }}>{u.email}</td>
+                <td style={{ padding: '8px' }}>{u.role}</td>
+                <td style={{ padding: '8px' }}>
+                  {u.role === 'USER' ? (
+                    <select value={u.classId ?? ''} onChange={(e) => changeUserClass(u, e.target.value)}>
+                      <option value="">Not set</option>
+                      {classes.map((c) => <option key={c.id} value={c.id}>{classLabel(c)}</option>)}
+                    </select>
+                  ) : 'All classes'}
+                </td>
+                {/* Delete button for students/teachers only, never for admins */}
+                <td style={{ padding: '8px' }}>
+                  {u.role !== 'ADMIN' && (
+                    <button className="btn btn-secondary" onClick={() => handleDeleteUser(u)}>
+                      Delete
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default Admin;
