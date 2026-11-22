@@ -24,7 +24,13 @@ function Login() {
   navigate('/dashboard');
 }
   } catch (error) {
-    setMessage('Invalid email or password');
+    // error.response is missing when the server didn't answer at all
+    // (asleep, down, or no internet). Otherwise the server said "no".
+    if (!error.response) {
+      setMessage('Server is waking up or not reachable. Please wait a minute and try again.');
+    } else {
+      setMessage('Invalid email or password');
+    }
   }
 };
 
